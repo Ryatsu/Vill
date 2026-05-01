@@ -1,9 +1,7 @@
 package backend.Repository;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
 import backend.Entity.Item;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface ItemRepository {
-
-    
+public interface ItemRepository extends MongoRepository<Item, String> {
 }

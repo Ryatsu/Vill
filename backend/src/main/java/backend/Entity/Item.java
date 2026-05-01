@@ -1,5 +1,7 @@
 package backend.Entity;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -8,37 +10,35 @@ import java.util.Date;
 @Document(collection = "items")
 public class Item {
 
-	@Id
-	private String id;
-	private String name;
-	private float price;
-	private float cost;
-	private Date dateBought;
-	private Date dateRegistered;
+    @Id
+    private String id;
 
-	public Item() {}
+    @NotBlank(message = "Item name is required")
+    private String name;
 
-	public Item(String id, String name, float price, float cost, Date dateBought, Date dateRegistered) {
-		this.id = id;
-		this.name = name;
-		this.price = price;
-		this.cost = cost;
-		this.dateBought = dateBought;
-		this.dateRegistered = dateRegistered;
-	}
+    @Positive(message = "Price must be positive")
+    private double price;
 
-	public String getId() { return id; }
-	public String getName() { return name; }
-	public float getPrice() { return price; }
-	public float getCost() { return cost; }
-	public Date getDateBought() { return dateBought; }
-	public Date getDateRegistered() { return dateRegistered; }
+    @Positive(message = "Cost must be positive")
+    private double cost;
 
-	public void setId(String id) { this.id = id; }
-	public void setName(String name) { this.name = name; }
-	public void setPrice(float price) { this.price = price; }
-	public void setCost(float cost) { this.cost = cost; }
-	public void setDateBought(Date dateBought) { this.dateBought = dateBought; }
-	public void setDateRegistered(Date dateRegistered) { this.dateRegistered = dateRegistered; }
+    private Date dateBought;
+    private Date dateRegistered;
 
+    public Item() {}
+
+    // Getters & Setters
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+    public double getCost() { return cost; }
+    public Date getDateBought() { return dateBought; }
+    public Date getDateRegistered() { return dateRegistered; }
+
+    public void setId(String id) { this.id = id; }
+    public void setName(String name) { this.name = name; }
+    public void setPrice(double price) { this.price = price; }
+    public void setCost(double cost) { this.cost = cost; }
+    public void setDateBought(Date dateBought) { this.dateBought = dateBought; }
+    public void setDateRegistered(Date dateRegistered) { this.dateRegistered = dateRegistered; }
 }
