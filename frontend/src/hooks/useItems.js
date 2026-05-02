@@ -33,5 +33,17 @@ export const useItems = () => {
     setItems(prev => prev.filter(i => i.id !== id))
   }
 
-  return { items, loading, addItem, markBought, removeItem }
+  const updateItem = async (id, data) => {
+    const res = await fetch(`http://localhost:8080/api/items/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+
+    const updated = await res.json()
+
+    setItems(prev => prev.map(i => (i.id === id ? updated : i)))
+  }
+
+  return { items, loading, addItem, markBought, removeItem, updateItem }
 }

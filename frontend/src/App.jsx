@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
 import ItemRegister from './pages/ItemRegister'
 import Inventory from './pages/Inventory'
+import CashOut from './pages/CashOut'
 
 function App() {
   return (
@@ -11,8 +12,9 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/register" element={<ItemRegister />} />
           <Route path="/inventory" element={<Inventory />} />
+          <Route path="/cash-out" element={<CashOut />} />  
+          <Route path="/register" element={<ItemRegister />} />
         </Routes>
       </Layout>
     </BrowserRouter>

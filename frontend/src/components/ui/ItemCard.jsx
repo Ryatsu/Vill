@@ -5,9 +5,9 @@ export default function ItemCard({ item, onBuy, onDelete }) {
   return (
     <div className="card">
       <h3>{item.name}</h3>
-      <p>Price: ${item.price}</p>
-      <p>Cost: ${item.cost}</p>
-      <p>Profit: ${profit.toFixed(2)}</p>
+      <p>Price: ₱{item.price}</p>
+      <p>Cost: ₱{item.cost}</p>
+      <p>Profit: ₱{profit.toFixed(2)}</p>
 
       <p>Status: {bought ? 'Bought' : 'Available'}</p>
 
