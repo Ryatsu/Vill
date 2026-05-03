@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class JwtTokenProvider {
-    @Value("${jwt.secret:your-secret-key-min-256-bits}")
-    private String jwtSecret;
+    @Value("${jwt.secret}")
+    private String secret;
     
     @Value("${jwt.expiration:86400000}") // 24 hours
     private long jwtExpiration;
@@ -19,13 +19,13 @@ public class JwtTokenProvider {
             .subject(username)
             .issuedAt(new Date())
             .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
-            .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+            .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
             .compact();
     }
     
     public String getUsernameFromToken(String token) {
         return Jwts.parser()
-            .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+            .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes()))
             .build()
             .parseClaimsJws(token)
             .getBody()

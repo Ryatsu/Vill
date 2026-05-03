@@ -1,13 +1,17 @@
 package backend.config;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 public class SpaController {
 
-    @GetMapping({"/", "/inventory", "/cash-out", "/register"})
-    public String forwardToIndex() {
+    @RequestMapping(value = {
+        "/",
+        "/{path:[^\\.]*}",
+        "/**/{path:[^\\.]*}"
+    })
+    public String forward() {
         return "forward:/index.html";
     }
 }
