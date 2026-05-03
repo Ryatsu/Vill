@@ -34,7 +34,7 @@ export const useItems = () => {
   }
 
   const updateItem = async (id, data) => {
-    const res = await fetch(`http://localhost:8080/api/items/${id}`, {
+    const res = await fetch(`/api/items/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),

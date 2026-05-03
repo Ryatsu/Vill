@@ -1,4 +1,4 @@
-const API = 'http://localhost:8080/api/cash'
+const API = '/api/cash'
 
 export const getCashRecords = async () => {
   const res = await fetch(API)

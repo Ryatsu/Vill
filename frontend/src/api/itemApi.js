@@ -1,4 +1,4 @@
-const API = 'http://localhost:8080/api/items'
+const API = '/api/items'
 
 export const getItems = async () => {
   const res = await fetch(API)
