@@ -10,9 +10,9 @@ public class BackendApplication {
 	public static void main(String[] args) {
 
 		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-		String jwt = dotenv.get("JWT_SECRET");
+		String jwt = dotenv.get("jwt.secret");
 		if (jwt != null) {
-			System.setProperty("JWT_SECRET", jwt);
+			System.setProperty("jwt.secret", jwt);
 		}
 		String mongo = dotenv.get("MONGODB_URI");
 		if (mongo != null) {
