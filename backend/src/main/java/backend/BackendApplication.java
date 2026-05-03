@@ -9,8 +9,11 @@ public class BackendApplication {
 
 	public static void main(String[] args) {
 
-        Dotenv dotenv = Dotenv.load();
-        System.setProperty("MONGODB_URI", dotenv.get("MONGODB_URI"));
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+		String mongoUri = dotenv.get("MONGODB_URI");
+		if (mongoUri != null) {
+			System.setProperty("MONGODB_URI", mongoUri);
+		}
 
 		SpringApplication.run(BackendApplication.class, args);
 		System.out.println("Server Running...");
