@@ -9,9 +9,15 @@ public class BackendApplication {
 
 	public static void main(String[] args) {
 
-        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-		System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
-		System.setProperty("MONGODB_URI", dotenv.get("MONGODB_URI"));
+		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+		String jwt = dotenv.get("JWT_SECRET");
+		if (jwt != null) {
+			System.setProperty("JWT_SECRET", jwt);
+		}
+		String mongo = dotenv.get("MONGODB_URI");
+		if (mongo != null) {
+			System.setProperty("MONGODB_URI", mongo);
+		}
 
 		SpringApplication.run(BackendApplication.class, args);
 		System.out.println("Server Running...");
