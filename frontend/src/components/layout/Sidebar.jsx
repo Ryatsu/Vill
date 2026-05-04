@@ -25,7 +25,8 @@ export default function Sidebar({ open, setOpen }) {
         <button onClick={() => setOpen(false)}>✕</button>
       </div>
 
-      <h2 className="text-xl font-bold mb-6 hidden md:block px-5">
+      <h2 className="hidden md:flex items-center gap-2 text-2xl font-bold px-5 my-6">
+        <img src="/vitrack_logo.png" alt="viTrack Logo" className="h-8 w-8" />
         viTrack
       </h2>
 
@@ -50,7 +51,7 @@ export default function Sidebar({ open, setOpen }) {
       </nav>
 
       {localStorage.getItem('token') ? (
-        <div className="p-9">
+        <div className="p-9 ">
           <button
             onClick={() => { localStorage.removeItem('token'); window.location.href = '/' }}
             className="w-full px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
