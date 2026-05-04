@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://vitrack.onrender.com/api/:path*"
+    }
+  ]
+}
