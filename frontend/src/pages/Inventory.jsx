@@ -1,16 +1,21 @@
 import { useState } from 'react'
+import { toast } from 'react-toastify'
+import { useConfirm } from '../context/ConfirmationContext'
 import { useItems } from '../hooks/useItems'
-import EditModal from '../components/EditModal'
 import RegisterModal from '../components/RegisterModal'
+import SkeletonLoader from '../components/SkeletonLoader'
+import LoadingOverlay from '../components/LoadingOverlay'
 import { createSale } from '../api/saleApi'
 
 export default function Inventory() {
-  const { items, loading, removeItem, updateItem, addItem } = useItems()
-  // const [selected, setSelected] = useState(null)
+  const confirm = useConfirm()
+  const { items, loading, removeItem, addItem, markBought } = useItems()
   const [search, setSearch] = useState('')
   const [selectedItem, setSelectedItem] = useState(null)
   const [qty, setQty] = useState(1)
   const [showRegister, setShowRegister] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingMessage, setProcessingMessage] = useState('Processing...')
 
   const filtered = items.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase())
@@ -18,14 +23,101 @@ export default function Inventory() {
 
   const handleSell = async () => {
     if (!selectedItem) return
-
-    await createSale(selectedItem.id, qty)
-    setSearch('')
-    setSelectedItem(null)
-    setQty(1)
+    
+    const confirmed = await confirm({
+      title: 'Confirm Sale',
+      message: `Sell ${qty} of "${selectedItem.name}"?`,
+      confirmText: 'Sell',
+      cancelText: 'Cancel',
+    })
+    if (!confirmed) return
+    
+    try {
+      setIsProcessing(true)
+      setProcessingMessage('Recording sale...')
+      await createSale(selectedItem.id, qty)
+      toast.success('Sale recorded successfully!')
+      setSearch('')
+      setSelectedItem(null)
+      setQty(1)
+    } catch (err) {
+      toast.error(err.message || 'Failed to record sale')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
-  if (loading) return <p>Loading...</p>
+  const handleDelete = async (id, name) => {
+    const confirmed = await confirm({
+      title: 'Delete Item',
+      message: `Are you sure you want to delete "${name}"?`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+    })
+    if (!confirmed) return
+    
+    try {
+      setIsProcessing(true)
+      setProcessingMessage('Deleting item...')
+      await removeItem(id)
+      toast.success('Item deleted successfully!')
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete item')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleBuy = async (id, name) => {
+    const confirmed = await confirm({
+      title: 'Mark as Bought',
+      message: `Mark "${name}" as bought?`,
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
+    })
+    if (!confirmed) return
+    
+    try {
+      setIsProcessing(true)
+      setProcessingMessage('Updating item...')
+      await markBought(id)
+      toast.success('Item updated successfully!')
+    } catch (err) {
+      toast.error(err.message || 'Failed to update item')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleAddItem = async (item) => {
+    try {
+      setIsProcessing(true)
+      setProcessingMessage('Registering item...')
+      await addItem(item)
+      toast.success('Item registered successfully!')
+      setShowRegister(false)
+    } catch (err) {
+      toast.error(err.message || 'Failed to register item')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div>
+        <h1 className="text-2xl font-bold mb-6">Inventory</h1>
+        <div className="bg-white p-6 rounded shadow mb-6 animate-pulse">
+          <div className="h-6 bg-gray-300 rounded w-1/3 mb-4" />
+          <div className="space-y-3">
+            <div className="h-10 bg-gray-200 rounded" />
+            <div className="h-32 bg-gray-100 rounded" />
+          </div>
+        </div>
+        <SkeletonLoader count={3} variant="card" />
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -125,21 +217,37 @@ export default function Inventory() {
         {showRegister && (
           <RegisterModal
             onClose={() => setShowRegister(false)}
-            onSave={(item) => {
-              addItem(item)
-              setShowRegister(false)
-            }}
+            onSave={handleAddItem}
+            items={items}
           />
         )}
       </div>
 
-      {/* {selected && (
-        <EditModal
-          item={selected}
-          onClose={() => setSelected(null)}
-          onUpdate={updateItem}
-        />
-      )} */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {items.map(item => (
+          <div key={item.id} className="bg-white p-4 rounded shadow">
+            <h3 className="font-bold text-lg mb-2">{item.name}</h3>
+            <p className="text-sm">Price: ₱{item.price}</p>
+            <p className="text-sm mb-3">Cost: ₱{item.cost}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleBuy(item.id, item.name)}
+                className="flex-1 bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+              >
+                Buy
+              </button>
+              <button
+                onClick={() => handleDelete(item.id, item.name)}
+                className="flex-1 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <LoadingOverlay isOpen={isProcessing} message={processingMessage} />
     </div>
   )
 }

@@ -5,17 +5,21 @@ const API_URL = _BASE
       : _BASE.replace(/\/$/, '') + '/api')
   : '/api'
 
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export const getSales = async () => {
-  const res = await fetch(`${API_URL}/sales`)
+  const res = await fetch(`${API_URL}/sales`, { headers: { ...authHeaders() } })
   if (!res.ok) throw new Error('Failed to fetch sales')
   return res.json()
 }
 
 export const createSale = async (itemId, qty) => {
-  const res = await fetch(`${API_URL}/sales`, {
+  const res = await fetch(`${API_URL}/sales/${itemId}?qty=${qty}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ itemId, qty })
+    headers: { ...authHeaders() },
   })
 
   if (!res.ok) throw new Error('Failed to record sale')

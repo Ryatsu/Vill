@@ -1,10 +1,30 @@
 import { useState } from 'react'
+import { toast } from 'react-toastify'
+import { useConfirm } from '../context/ConfirmationContext'
 
-export default function RegisterModal({ onClose, onSave }) {
+export default function RegisterModal({ onClose, onSave, items = [] }) {
+  const confirm = useConfirm()
   const [form, setForm] = useState({ name: '', price: '', cost: '' })
 
-  const handleSubmit = (e) => {
+  const hasDuplicateName = items.some(item => 
+    item.name.toLowerCase() === form.name.toLowerCase() && form.name.trim() !== ''
+  )
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (hasDuplicateName) {
+      toast.error(`Item "${form.name}" already exists!`)
+      return
+    }
+
+    const confirmed = await confirm({
+      title: 'Register Item',
+      message: `Add item "${form.name}" to inventory?`,
+      confirmText: 'Register',
+      cancelText: 'Cancel',
+    })
+    if (!confirmed) return
 
     onSave({
       name: form.name,
@@ -23,17 +43,24 @@ export default function RegisterModal({ onClose, onSave }) {
 
         <form onSubmit={handleSubmit} className="space-y-3">
 
-          <input
-            className="w-full border p-2 rounded"
-            placeholder="Item Name"
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
+          <div>
+            <input
+              className="w-full border p-2 rounded"
+              placeholder="Item Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+            {hasDuplicateName && (
+              <p className="text-red-500 text-sm mt-1">Item name already exists</p>
+            )}
+          </div>
 
           <input
             type="number"
             className="w-full border p-2 rounded"
             placeholder="Price"
+            value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             required
           />
@@ -42,19 +69,27 @@ export default function RegisterModal({ onClose, onSave }) {
             type="number"
             className="w-full border p-2 rounded"
             placeholder="Cost"
+            value={form.cost}
             onChange={(e) => setForm({ ...form, cost: e.target.value })}
             required
           />
 
           <div className="flex gap-2">
-            <button className="flex-1 bg-blue-500 text-white py-2 rounded">
+            <button 
+              className={`flex-1 py-2 rounded text-white font-medium transition-colors ${
+                hasDuplicateName || !form.name.trim() || !form.price || !form.cost
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+              disabled={hasDuplicateName || !form.name.trim() || !form.price || !form.cost}
+            >
               Save
             </button>
 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-300 py-2 rounded"
+              className="flex-1 bg-gray-300 py-2 rounded hover:bg-gray-400 transition-colors"
             >
               Cancel
             </button>

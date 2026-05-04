@@ -5,16 +5,21 @@ const API_URL = _BASE
       : _BASE.replace(/\/$/, '') + '/api')
   : '/api'
 
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export const getItems = async () => {
-  const res = await fetch(`${API_URL}/items`)
+  const res = await fetch(`${API_URL}/items`, { headers: { ...authHeaders() } })
   if (!res.ok) throw new Error('Failed to fetch items')
   return res.json()
 }
 
 export const createItem = async (data) => {
-  const res = await fetch(`${API_URL}/items`, {
+  const res = await fetch(`${API_URL}/items/register`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(data),
   })
   if (!res.ok) throw new Error('Failed to create item')
@@ -22,11 +27,11 @@ export const createItem = async (data) => {
 }
 
 export const buyItem = async (id) => {
-  const res = await fetch(`${API_URL}/items/${id}/buy`, { method: 'PUT' })
+  const res = await fetch(`${API_URL}/items/${id}/buy`, { method: 'PUT', headers: { ...authHeaders() } })
   if (!res.ok) throw new Error('Failed to buy item')
   return res.json()
 }
 
 export const deleteItem = async (id) => {
-  await fetch(`${API_URL}/items/${id}`, { method: 'DELETE' })
+  await fetch(`${API_URL}/items/${id}`, { method: 'DELETE', headers: { ...authHeaders() } })
 }

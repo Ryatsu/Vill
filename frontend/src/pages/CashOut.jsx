@@ -1,10 +1,16 @@
 import { useState } from 'react'
+import { toast } from 'react-toastify'
+import { useConfirm } from '../context/ConfirmationContext'
+import SkeletonLoader from '../components/SkeletonLoader'
+import LoadingOverlay from '../components/LoadingOverlay'
 import { useCash } from '../hooks/useCash'
 
 export default function CashOut() {
+  const confirm = useConfirm()
   const { records, loading, error, add, pay, unpay, remove } = useCash()
   const [search, setSearch] = useState('')
-  const [confirm, setConfirm] = useState(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingMessage, setProcessingMessage] = useState('Processing...')
 
   const [form, setForm] = useState({
     type: 'UNPAID_ITEM',
@@ -12,15 +18,27 @@ export default function CashOut() {
     amount: '',
   })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!form.description || !form.amount) {
+      toast.error('Please fill in all fields')
+      return
+    }
 
-    add({
-      ...form,
-      amount: Number(form.amount),
-    })
-
-    setForm({ type: 'UNPAID_ITEM', description: '', amount: '' })
+    try {
+      setIsProcessing(true)
+      setProcessingMessage('Adding record...')
+      await add({
+        ...form,
+        amount: Number(form.amount),
+      })
+      toast.success('Record added successfully!')
+      setForm({ type: 'UNPAID_ITEM', description: '', amount: '' })
+    } catch (err) {
+      toast.error(err.message || 'Failed to add record')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const formatRecordedAt = (value) => {
@@ -51,33 +69,63 @@ export default function CashOut() {
     )
   })
 
-  const openConfirm = (record, action) => {
-    setConfirm({
-      record,
-      action,
+  const handleMarkPaid = async (record) => {
+    const confirmed = await confirm({
+      title: 'Mark as Paid',
+      message: `Mark this record (₱${record.amount}) as paid?`,
+      confirmText: 'Mark Paid',
+      cancelText: 'Cancel',
     })
+    if (!confirmed) return
+
+    try {
+      setIsProcessing(true)
+      setProcessingMessage('Updating record...')
+      await pay(record.id)
+      toast.success('Marked as paid!')
+    } catch (err) {
+      toast.error(err.message || 'Failed to update record')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
-  const closeConfirm = () => setConfirm(null)
+  const handleMarkUnpaid = async (record) => {
+    const confirmed = await confirm({
+      title: 'Revert to Unpaid',
+      message: `Revert this record (₱${record.amount}) to unpaid?`,
+      confirmText: 'Revert',
+      cancelText: 'Cancel',
+    })
+    if (!confirmed) return
 
-  const runConfirmedAction = async () => {
-    if (!confirm) return
-
-    const { record, action } = confirm
-
-    if (action === 'pay') {
-      await pay(record.id)
-    }
-
-    if (action === 'unpay') {
+    try {
+      setIsProcessing(true)
+      setProcessingMessage('Updating record...')
       await unpay(record.id)
+      toast.success('Reverted to unpaid!')
+    } catch (err) {
+      toast.error(err.message || 'Failed to update record')
+    } finally {
+      setIsProcessing(false)
     }
-
-    closeConfirm()
   }
 
   if (loading) {
-    return <p className="text-gray-500">Loading cash records...</p>
+    return (
+      <div>
+        <h1 className="text-2xl font-bold mb-4">Cash Records</h1>
+        <div className="bg-white p-4 rounded shadow mb-6 animate-pulse">
+          <div className="h-6 bg-gray-300 rounded w-1/4 mb-4" />
+          <div className="space-y-2">
+            <div className="h-10 bg-gray-200 rounded" />
+            <div className="h-10 bg-gray-200 rounded" />
+            <div className="h-10 bg-gray-200 rounded" />
+          </div>
+        </div>
+        <SkeletonLoader count={5} variant="list" />
+      </div>
+    )
   }
 
   return (
@@ -152,7 +200,7 @@ export default function CashOut() {
               {!r.paid && (
                 <button
                   type="button"
-                  onClick={() => openConfirm(r, 'pay')}
+                  onClick={() => handleMarkPaid(r)}
                   className="bg-green-500 text-white px-2 py-1 rounded"
                 >
                   Mark Paid
@@ -161,20 +209,12 @@ export default function CashOut() {
               {r.paid && (
                 <button
                   type="button"
-                  onClick={() => openConfirm(r, 'unpay')}
+                  onClick={() => handleMarkUnpaid(r)}
                   className="bg-red-500 text-white px-2 py-1 rounded"
                 >
                   Revert to Unpaid
                 </button>
               )}
-
-              {/* <button
-                type="button"
-                onClick={() => remove(r.id)}
-                className="bg-red-500 text-white px-2 py-1 rounded"
-              >
-                Delete
-              </button> */}
             </div>
 
           </div>
@@ -184,36 +224,7 @@ export default function CashOut() {
         )}
       </div>
 
-      {confirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold mb-2">
-              Confirm {confirm.action === 'pay' ? 'Mark Paid' : 'Revert to Unpaid'}
-            </h2>
-
-            <p className="text-gray-600 mb-4">
-              Are you sure you want to {confirm.action === 'pay' ? 'mark this record as paid' : 'revert this record to unpaid'}?
-            </p>
-
-            <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={closeConfirm}
-                className="rounded border px-4 py-2 text-gray-700 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={runConfirmedAction}
-                className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <LoadingOverlay isOpen={isProcessing} message={processingMessage} />
     </div>
   )
 }
