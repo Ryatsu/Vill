@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-
-const API_URL = (() => {
-  const base = import.meta.env.VITE_API_URL || ''
-  if (!base) return '/api'
-  if (base.replace(/\/$/, '').endsWith('/api')) return base.replace(/\/$/, '')
-  return base.replace(/\/$/, '') + '/api'
-})()
+import { API_BASE } from '../api/apiBase'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -15,21 +9,22 @@ export default function Login() {
   const nav = useNavigate()
 
   useEffect(() => {
-    if (localStorage.getItem('token')) {
-      nav('/dashboard', { replace: true })
-    }
+    localStorage.removeItem('token')
   }, [nav])
 
   const submit = async (e) => {
     e.preventDefault()
+    setError(null)
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
-      if (!res.ok) throw new Error('Invalid credentials')
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        throw new Error(data?.error === 'invalid_credentials' ? 'Invalid username or password' : 'Unable to sign in')
+      }
       localStorage.setItem('token', data.token)
       nav('/dashboard')
     } catch (err) {

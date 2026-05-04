@@ -1,9 +1,4 @@
-const _BASE = import.meta.env.VITE_API_URL || ''
-const API_URL = _BASE
-  ? (_BASE.replace(/\/$/, '').endsWith('/api')
-      ? _BASE.replace(/\/$/, '')
-      : _BASE.replace(/\/$/, '') + '/api')
-  : '/api'
+import { API_BASE } from './apiBase'
 
 function authHeaders() {
   const token = localStorage.getItem('token')
@@ -11,13 +6,13 @@ function authHeaders() {
 }
 
 export const getSales = async () => {
-  const res = await fetch(`${API_URL}/sales`, { headers: { ...authHeaders() } })
+  const res = await fetch(`${API_BASE}/sales`, { headers: { ...authHeaders() } })
   if (!res.ok) throw new Error('Failed to fetch sales')
   return res.json()
 }
 
 export const createSale = async (itemId, qty) => {
-  const res = await fetch(`${API_URL}/sales/${itemId}?qty=${qty}`, {
+  const res = await fetch(`${API_BASE}/sales/${itemId}?qty=${qty}`, {
     method: 'POST',
     headers: { ...authHeaders() },
   })
