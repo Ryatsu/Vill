@@ -23,7 +23,6 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
-COPY backend/src/main/resources/.env /app/.env
 
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","app.jar"]
