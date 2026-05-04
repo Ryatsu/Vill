@@ -13,27 +13,31 @@ export default function Sidebar({ open, setOpen }) {
   return (
     <aside
       className={`
-        fixed md:static top-0 left-0 h-full w-64 bg-white shadow-md p-5 z-50
-        transform transition-transform duration-300
+        fixed md:static top-0 left-0 h-full w-64 bg-white shadow-md z-50
+        transform transition-transform duration-300 flex flex-col
         ${open ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
       `}
     >
       {/* CLOSE BUTTON (mobile only) */}
-      <div className="flex justify-between items-center mb-6 md:hidden">
+      <div className="flex justify-between items-center mb-6 md:hidden p-5">
         <h2 className="text-xl font-bold">viTrack</h2>
         <button onClick={() => setOpen(false)}>✕</button>
       </div>
 
-
-      <h2 className="text-xl font-bold mb-6 hidden md:block">
+      <h2 className="text-xl font-bold mb-6 hidden md:block px-5">
         viTrack
       </h2>
 
-      <nav className="space-y-2">
-        <Link to="/" onClick={() => setOpen(false)} className={linkClass('/')}>
+      <nav className="space-y-2 flex-1 px-5">
+        <Link to="/dashboard" onClick={() => setOpen(false)} className={linkClass('/dashboard')}>
           Dashboard
         </Link>
+        {!localStorage.getItem('token') ? (
+          <Link to="/" onClick={() => setOpen(false)} className={linkClass('/')}>
+            Sign in
+          </Link>
+        ) : null}
         <Link to="/register" onClick={() => setOpen(false)} className={linkClass('/register')}>
           Register
         </Link>
@@ -44,6 +48,17 @@ export default function Sidebar({ open, setOpen }) {
           Cash Out
         </Link>
       </nav>
+
+      {localStorage.getItem('token') ? (
+        <div className="p-9">
+          <button
+            onClick={() => { localStorage.removeItem('token'); window.location.href = '/' }}
+            className="w-full px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+          >
+            Sign out
+          </button>
+        </div>
+      ) : null}
     </aside>
   )
 }
