@@ -40,7 +40,7 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                    .allowedOrigins("https://vitrack.app", "https://www.vitrack.app", "http://localhost:5173")
+                    .allowedOrigins("https://vitrack.app", "https://www.vitrack.app", "https://*.vercel.app", "http://localhost:5173")
                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                     .allowedHeaders("*")
                     .allowCredentials(true)
