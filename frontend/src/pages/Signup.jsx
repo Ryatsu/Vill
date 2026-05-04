@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
+const API_URL = (() => {
+  const base = import.meta.env.VITE_API_URL || ''
+  if (!base) return '/api'
+  if (base.replace(/\/$/, '').endsWith('/api')) return base.replace(/\/$/, '')
+  return base.replace(/\/$/, '') + '/api'
+})()
+
 export default function Signup() {
   const [name, setName] = useState('')
   const [username, setUsername] = useState('')
@@ -11,7 +18,7 @@ export default function Signup() {
   const submit = async (e) => {
     e.preventDefault()
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, username, password }),
