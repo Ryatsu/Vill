@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
+const API_URL = (() => {
+  const base = import.meta.env.VITE_API_URL || ''
+  if (!base) return '/api'
+  if (base.replace(/\/$/, '').endsWith('/api')) return base.replace(/\/$/, '')
+  return base.replace(/\/$/, '') + '/api'
+})()
+
 export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -16,7 +23,7 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault()
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
