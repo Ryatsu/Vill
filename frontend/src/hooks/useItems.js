@@ -34,13 +34,7 @@ export const useItems = () => {
   }
 
   const updateItem = async (id, data) => {
-    const res = await fetch(`/api/items/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-
-    const updated = await res.json()
+    const updated = await api.updateItem(id, data)
 
     setItems(prev => prev.map(i => (i.id === id ? updated : i)))
   }

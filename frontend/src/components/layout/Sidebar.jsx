@@ -13,7 +13,7 @@ export default function Sidebar({ open, setOpen }) {
   return (
     <aside
       className={`
-        fixed md:static top-0 left-0 h-full w-64 bg-white shadow-md z-50
+        fixed md:static top-0 left-0 h-full w-64 bg-white shadow-md z-41
         transform transition-transform duration-300 flex flex-col
         ${open ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0

@@ -36,7 +36,7 @@ export default function RegisterModal({ onClose, onSave, items = [] }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center animate-fade-in z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center animate-fade-in z-42">
       <div className="bg-white p-6 rounded-xl w-96 animate-slide-up">
 
         <h2 className="text-lg font-bold mb-4">Register Item</h2>
