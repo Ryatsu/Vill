@@ -71,6 +71,68 @@ export default function Dashboard() {
     return `${year}-${month}-${day}`
   }, [])
 
+  // --- Chart data helpers ---
+  const last7Days = useMemo(() => {
+    const now = new Date()
+    const days = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(now.getDate() - i)
+      const key = d.toISOString().slice(0, 10)
+      days.push({ key, date: d, total: 0 })
+    }
+
+    sales.forEach((s) => {
+      const d = new Date(s.recordedAt ?? s.date)
+      const key = d.toISOString().slice(0, 10)
+      const day = days.find((x) => x.key === key)
+      if (day) day.total += Number(s.total || 0)
+    })
+
+    return days
+  }, [sales])
+
+  const top3ThisMonth = useMemo(() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+
+    const map = {}
+    sales.forEach((s) => {
+      const d = new Date(s.recordedAt ?? s.date)
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        const key = s.itemName || s.description || 'Unknown'
+        map[key] = (map[key] || 0) + Number(s.quantity || 0)
+      }
+    })
+
+    return Object.entries(map)
+      .map(([name, qty]) => ({ name, qty }))
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 3)
+  }, [sales])
+
+  const monthCostRevenue = useMemo(() => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth()
+    let revenue = 0
+    let cost = 0
+
+    sales.forEach((s) => {
+      const d = new Date(s.recordedAt ?? s.date)
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        const qty = Number(s.quantity || 0)
+        revenue += Number(s.total || 0)
+        const item = items.find(i => i.id === s.itemId || i.name === s.itemName)
+        const unitCost = item ? Number(item.cost || 0) : 0
+        cost += unitCost * qty
+      }
+    })
+
+    return { revenue, cost }
+  }, [sales, items])
+
   const todaySales = dailySales.find((entry) => entry.key === todayKey)
   const visibleSales = selectedDate
     ? dailySales.filter((entry) => entry.key === selectedDate)
@@ -187,6 +249,67 @@ export default function Dashboard() {
     doc.save(`sales-${selectedDay.key}.pdf`)
   }
 
+  const LineChart = ({ data, width = 400, height = 120 }) => {
+    const max = Math.max(...data.map(d => d.total), 1)
+    const points = data.map((d, i) => {
+      const x = (i / (data.length - 1)) * width
+      const y = height - (d.total / max) * (height - 10)
+      return `${x},${y}`
+    }).join(' ')
+
+    return (
+      <svg width="100%" viewBox={`0 0 ${width} ${height}`} className="rounded">
+        <polyline fill="none" stroke="#2563eb" strokeWidth="3" points={points} />
+        {data.map((d, i) => {
+          const x = (i / (data.length - 1)) * width
+          const y = height - (d.total / max) * (height - 10)
+          return <circle key={d.key} cx={x} cy={y} r="3" fill="#10b981" />
+        })}
+      </svg>
+    )
+  }
+
+  const BarList = ({ items }) => (
+    <div className="space-y-3">
+      {items.map((it) => (
+        <div key={it.name} className="space-y-1">
+          <div className="flex justify-between">
+            <span className="font-medium">{it.name}</span>
+            <span className="text-sm text-gray-600">{it.qty}</span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded overflow-hidden">
+            <div style={{ width: `${Math.min(100, (it.qty / (items[0]?.qty || 1)) * 100)}%` }} className="h-full bg-blue-500" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
+  const PieChart = ({ cost, revenue, size = 140 }) => {
+    const total = cost + revenue || 1
+    const costPct = (cost / total) * 100
+    const costAngle = (costPct / 100) * 2 * Math.PI
+    const largeArc = costPct > 50 ? 1 : 0
+    const r = size / 2
+    const cx = r
+    const cy = r
+    const x = cx + r * Math.cos(0 - Math.PI / 2)
+    const y = cy + r * Math.sin(0 - Math.PI / 2)
+    const x2 = cx + r * Math.cos(costAngle - Math.PI / 2)
+    const y2 = cy + r * Math.sin(costAngle - Math.PI / 2)
+
+    const path = `M ${cx} ${cy} L ${x} ${y} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`
+
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle cx={cx} cy={cy} r={r} fill="#10b981" opacity="0.12" />
+        <path d={path} fill="#ef4444" />
+        <circle cx={cx} cy={cy} r={r * 0.55} fill="#fff" />
+        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" className="font-bold">{`₱${revenue.toFixed(0)}`}</text>
+      </svg>
+    )
+  }
+
   const Card = ({ title, value }) => (
     <div className="bg-white p-5 rounded-xl shadow">
       <p className="text-gray-500">{title}</p>
@@ -198,11 +321,36 @@ export default function Dashboard() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card title="Total Items" value={total} />
-        <Card title="Bought" value={bought} />
-        <Card title="Available" value={total - bought} />
-        <Card title="Total Value" value={`₱${value.toFixed(2)}`} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-sm text-gray-500">Weekly Sales</p>
+          <div className="mt-3">
+            <LineChart data={last7Days} />
+            <div className="mt-2 text-xs text-gray-500 flex justify-between">
+              {last7Days.map(d => (
+                <div key={d.key} className="text-center w-1/7">{new Date(d.date).toLocaleDateString(undefined, { weekday: 'short' })}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow">
+          <p className="text-sm text-gray-500">Top 3 Items (this month)</p>
+          <div className="mt-3">
+            {top3ThisMonth.length ? <BarList items={top3ThisMonth} /> : <p className="text-sm text-gray-500">No sales this month.</p>}
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl shadow flex flex-col items-center">
+          <p className="text-sm text-gray-500">This Month: Cost vs Revenue</p>
+          <div className="mt-4 flex items-center gap-4">
+            <PieChart cost={monthCostRevenue.cost} revenue={monthCostRevenue.revenue} />
+            <div className="text-sm">
+              <p className="text-gray-600">Revenue: <span className="font-semibold">₱{monthCostRevenue.revenue.toFixed(2)}</span></p>
+              <p className="text-gray-600">Cost: <span className="font-semibold">₱{monthCostRevenue.cost.toFixed(2)}</span></p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 bg-white p-6 rounded-xl shadow">

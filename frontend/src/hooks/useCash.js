@@ -33,6 +33,11 @@ export const useCash = () => {
     setRecords(prev => prev.map(r => r.id === id ? updated : r))
   }
 
+  const payPartial = async (id, amount) => {
+    const updated = await api.makePayment(id, amount)
+    setRecords(prev => prev.map(r => r.id === id ? updated : r))
+  }
+
   const unpay = async (id) => {
     const updated = await api.markUnpaid(id)
     setRecords(prev => prev.map(r => r.id === id ? updated : r))
@@ -43,5 +48,5 @@ export const useCash = () => {
     setRecords(prev => prev.filter(r => r.id !== id))
   }
 
-  return { records, loading, error, add, pay, unpay, remove, reload: load }
+  return { records, loading, error, add, pay, payPartial, unpay, remove, reload: load }
 }

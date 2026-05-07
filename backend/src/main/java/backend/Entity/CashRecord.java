@@ -3,7 +3,9 @@ package backend.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Document(collection = "cash_records")
 public class CashRecord {
@@ -12,11 +14,14 @@ public class CashRecord {
     private String id;
 
     private String type; // UNPAID_ITEM, BORROWED, LOAN
+    private String personName;
     private String description;
     private double amount;
+    private double paidAmount = 0.0; // track partial payments
     private boolean paid;
     private Date date;
     private Date recordedAt;
+    private List<String> saleIds = new ArrayList<>(); // track sales created from payments
 
     public CashRecord() {}
 
@@ -33,8 +38,20 @@ public class CashRecord {
         return description;
     }
 
+    public String getPersonName() {
+        return personName;
+    }
+
     public double getAmount() {
         return amount;
+    }
+
+    public double getPaidAmount() {
+        return paidAmount;
+    }
+
+    public double getRemainingAmount() {
+        return amount - paidAmount;
     }
 
     public boolean isPaid() {
@@ -61,8 +78,16 @@ public class CashRecord {
         this.description = description;
     }
 
+    public void setPersonName(String personName) {
+        this.personName = personName;
+    }
+
     public void setAmount(double amount) {
         this.amount = amount;
+    }
+
+    public void setPaidAmount(double paidAmount) {
+        this.paidAmount = paidAmount;
     }
 
     public void setPaid(boolean paid) {
@@ -77,5 +102,20 @@ public class CashRecord {
     public void setRecordedAt(Date recordedAt) {
         this.recordedAt = recordedAt;
         this.date = recordedAt;
+    }
+
+    public List<String> getSaleIds() {
+        return saleIds;
+    }
+
+    public void setSaleIds(List<String> saleIds) {
+        this.saleIds = saleIds;
+    }
+
+    public void addSaleId(String saleId) {
+        if (this.saleIds == null) {
+            this.saleIds = new ArrayList<>();
+        }
+        this.saleIds.add(saleId);
     }
 }

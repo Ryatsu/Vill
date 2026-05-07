@@ -5,7 +5,7 @@ export default function Layout({ children }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
 
       {/* MOBILE Overlay */}
       {open && (
@@ -18,13 +18,13 @@ export default function Layout({ children }) {
       {/* SIDEBAR */}
       <Sidebar open={open} setOpen={setOpen} />
 
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col bg-transparent">
         
         {/* MOBILE Mode */}
-        <div className="md:hidden flex items-center justify-between p-4 border-b bg-green-500 text-gray-700">
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-green-50 text-blue-700">
           <button
             onClick={() => setOpen(true)}
-            className="bg-green-800 text-white px-3 py-2 rounded"
+            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded"
           >
             ☰
           </button>

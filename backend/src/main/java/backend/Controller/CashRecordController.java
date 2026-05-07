@@ -23,13 +23,18 @@ public class CashRecordController {
     }
 
     @PostMapping
-    public CashRecord create(@RequestBody CashRecord record) {
-        return service.create(record);
+    public CashRecord create(@RequestBody CashRecordRequest request) {
+        return service.create(request);
     }
 
     @PutMapping("/{id}/pay")
     public CashRecord markPaid(@PathVariable String id) {
         return service.markPaid(id);
+    }
+
+    @PutMapping("/{id}/payment")
+    public CashRecord makePayment(@PathVariable String id, @RequestBody PaymentRequest request) {
+        return service.makePayment(id, request);
     }
 
     @PutMapping("/{id}/unpay")

@@ -4,16 +4,16 @@ export default function Sidebar({ open, setOpen }) {
   const { pathname } = useLocation()
 
   const linkClass = (path) =>
-    `block px-4 py-2 rounded-lg ${
+    `block px-4 py-2 rounded-lg border transition-all duration-100 ${
       pathname === path
-        ? 'bg-blue-500 text-white'
-        : 'text-gray-700 hover:bg-gray-200'
+        ? 'bg-gradient-to-r from-blue-500 to-green-500 text-white border-blue-500 shadow-md'
+        : 'text-gray-700 border-transparent hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
     }`
 
   return (
     <aside
       className={`
-        fixed md:static top-0 left-0 h-full w-64 bg-white shadow-md z-41
+        fixed md:static top-0 left-0 h-full w-64 bg-green-100 shadow-md border-r border-blue-100 z-41
         transform transition-transform duration-300 flex flex-col
         ${open ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
@@ -40,7 +40,7 @@ export default function Sidebar({ open, setOpen }) {
           </Link>
         ) : null}
         <Link to="/register" onClick={() => setOpen(false)} className={linkClass('/register')}>
-          Register
+          Manual Sale
         </Link>
         <Link to="/inventory" onClick={() => setOpen(false)} className={linkClass('/inventory')}>
           Inventory
