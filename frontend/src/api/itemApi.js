@@ -27,6 +27,16 @@ export const buyItem = async (id) => {
   return res.json()
 }
 
+export const updateItem = async (id, data) => {
+  const res = await fetch(`${API_BASE}/items/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error('Failed to update item')
+  return res.json()
+}
+
 export const deleteItem = async (id) => {
   await fetch(`${API_BASE}/items/${id}`, { method: 'DELETE', headers: { ...authHeaders() } })
 }

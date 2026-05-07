@@ -3,42 +3,56 @@ import { toast } from 'react-toastify'
 import { useConfirm } from '../context/ConfirmationContext'
 import LoadingOverlay from '../components/LoadingOverlay'
 import { useItems } from '../hooks/useItems'
+import RegisterModal from '../components/RegisterModal'
+import { createSale } from '../api/saleApi'
 
 export default function ItemRegister() {
   const confirm = useConfirm()
   const { items, addItem } = useItems()
-  const [form, setForm] = useState({ name: '', price: '', cost: '' })
+  const [search, setSearch] = useState('')
+  const [selectedItem, setSelectedItem] = useState(null)
+  const [qty, setQty] = useState(1)
+  const [showRegister, setShowRegister] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [processingMessage, setProcessingMessage] = useState('Processing...')
 
-  const hasDuplicateName = items.some(item => 
-    item.name.toLowerCase() === form.name.toLowerCase() && form.name.trim() !== ''
+  const filtered = items.filter((item) =>
+    item.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (hasDuplicateName) {
-      toast.error(`Item "${form.name}" already exists!`)
-      return
-    }
-
+  const handleSell = async () => {
+    if (!selectedItem) return
+    
     const confirmed = await confirm({
-      title: 'Register Item',
-      message: `Add item "${form.name}" to inventory?`,
-      confirmText: 'Register',
+      title: 'Confirm Sale',
+      message: `Sell ${qty} of "${selectedItem.name}"?`,
+      confirmText: 'Sell',
       cancelText: 'Cancel',
     })
     if (!confirmed) return
-
+    
     try {
       setIsProcessing(true)
-      await addItem({
-        name: form.name,
-        price: Number(form.price),
-        cost: Number(form.cost),
-      })
+      setProcessingMessage('Recording sale...')
+      await createSale(selectedItem.id, qty)
+      toast.success('Sale recorded successfully!')
+      setSearch('')
+      setSelectedItem(null)
+      setQty(1)
+    } catch (err) {
+      toast.error(err.message || 'Failed to record sale')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleAddItem = async (item) => {
+    try {
+      setIsProcessing(true)
+      setProcessingMessage('Registering item...')
+      await addItem(item)
       toast.success('Item registered successfully!')
-      setForm({ name: '', price: '', cost: '' })
+      setShowRegister(false)
     } catch (err) {
       toast.error(err.message || 'Failed to register item')
     } finally {
@@ -47,55 +61,84 @@ export default function ItemRegister() {
   }
 
   return (
-    <div className="max-w-lg">
-      <h1 className="text-2xl font-bold mb-6">Register Item</h1>
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Register / Sell Item</h1>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow space-y-4">
+      <div className="bg-white p-6 rounded shadow mb-6">
+        <h2 className="text-lg font-bold mb-3">Sell Item</h2>
 
-        <div>
-          <input
-            className="w-full border p-2 rounded"
-            placeholder="Item Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          {hasDuplicateName && (
-            <p className="text-red-500 text-sm mt-1">Item name already exists</p>
+        <input
+          className="w-full border p-2 mb-3"
+          placeholder="Search item..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setSelectedItem(null)
+          }}
+        />
+
+        <div className="max-h-40 overflow-y-auto border mb-3">
+          {filtered.length > 0 ? (
+            filtered.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => setSelectedItem(item)}
+                className="p-2 hover:bg-gray-100 cursor-pointer"
+              >
+                {item.name} - ₱{item.price}
+              </div>
+            ))
+          ) : (
+            <div className="p-3 text-center">
+              <p>No item found</p>
+              <button
+                onClick={() => setShowRegister(true)}
+                className="text-blue-500 underline"
+              >
+                Register new item
+              </button>
+            </div>
           )}
         </div>
 
-        <input
-          className="w-full border p-2 rounded"
-          type="number"
-          placeholder="Price"
-          value={form.price}
-          onChange={(e) => setForm({ ...form, price: e.target.value })}
-          required
-        />
+        {selectedItem && (
+          <div>
+            <p>
+              <strong>{selectedItem.name}</strong>
+            </p>
+            <p>Price: ₱{selectedItem.price}</p>
 
-        <input
-          className="w-full border p-2 rounded"
-          type="number"
-          placeholder="Cost"
-          value={form.cost}
-          onChange={(e) => setForm({ ...form, cost: e.target.value })}
-          required
-        />
+            <input
+              type="number"
+              value={qty}
+              min="1"
+              onChange={(e) => setQty(Number(e.target.value))}
+              className="w-full border p-2 mt-2"
+            />
 
-        <button 
-          className={`w-full py-2 rounded font-medium transition-colors text-white ${
-            hasDuplicateName || !form.name.trim() || !form.price || !form.cost
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600'
-          }`}
-          disabled={hasDuplicateName || !form.name.trim() || !form.price || !form.cost}
-        >
-          Add Item
-        </button>
-      </form>
+            <p className="mt-2 font-bold">
+              Total: ₱{(selectedItem.price * qty).toFixed(2)}
+            </p>
 
-      <LoadingOverlay isOpen={isProcessing} message="Registering item..." />
+            <button
+              onClick={handleSell}
+              className="w-full bg-green-500 text-white py-2 mt-3"
+            >
+              Confirm Sale
+            </button>
+          </div>
+        )}
+
+        {showRegister && (
+          <RegisterModal
+            onClose={() => setShowRegister(false)}
+            onSave={handleAddItem}
+            items={items}
+          />
+        )}
+      </div>
+
+      <LoadingOverlay isOpen={isProcessing} message={processingMessage} />
     </div>
   )
 }
