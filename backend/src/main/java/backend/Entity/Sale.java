@@ -15,6 +15,7 @@ public class Sale {
     private String itemName;
     private double price;
     private int quantity;
+    private String saleType;
     private double total;
     private Date date;
 
@@ -38,6 +39,10 @@ public class Sale {
 
     public int getQuantity() {
         return quantity;
+    }
+
+    public String getSaleType() {
+        return saleType;
     }
 
     public double getTotal() {
@@ -66,6 +71,10 @@ public class Sale {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public void setSaleType(String saleType) {
+        this.saleType = saleType;
     }
 
     public void setTotal(double total) {

@@ -18,12 +18,27 @@ public class SaleController {
     }
 
     @PostMapping("/{itemId}")
-    public Sale sell(@PathVariable String itemId, @RequestParam int qty) {
-        return service.recordSale(itemId, qty);
+    public Sale sell(@PathVariable String itemId, @RequestBody SaleRequest request) {
+        return service.recordSale(itemId, request.getQty(), request.getUnitPrice(), request.getSaleType());
+    }
+
+    @PostMapping("/manual")
+    public Sale sellManual(@RequestBody SaleRequest request) {
+        return service.recordManualSale(
+                request.getDescription(),
+                request.getQty(),
+                request.getUnitPrice(),
+                request.getSaleType()
+        );
     }
 
     @GetMapping
     public List<Sale> all() {
         return service.getAllSales();
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteSale(@PathVariable String id) {
+        service.deleteSale(id);
     }
 }

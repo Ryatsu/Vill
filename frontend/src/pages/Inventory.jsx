@@ -12,9 +12,10 @@ export default function Inventory() {
   const confirm = useConfirm()
   const { items, loading, removeItem, addItem, updateItem } = useItems()
   const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState(search)
   const [selectedItem, setSelectedItem] = useState(null)
   const [editingItem, setEditingItem] = useState(null)
-  const [qty, setQty] = useState(1)
+  const [qty, setQty] = useState('1')
   const [cart, setCart] = useState([])
   const [showRegister, setShowRegister] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -30,6 +31,12 @@ export default function Inventory() {
     if (currentPage > newTotal) setCurrentPage(newTotal)
   }, [items.length])
 
+  // Debounce search input to avoid filtering on every keystroke
+  useEffect(() => {
+    const id = setTimeout(() => setSearch(searchInput), 250)
+    return () => clearTimeout(id)
+  }, [searchInput])
+
   const filtered = items.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase())
   )
@@ -39,12 +46,15 @@ export default function Inventory() {
   const addToCart = () => {
     if (!selectedItem) return
 
+    const quantity = Number(qty || 0)
+    if (!quantity || quantity < 1) return
+
     setCart(prev => {
       const existing = prev.find(item => item.id === selectedItem.id)
       if (existing) {
         return prev.map(item =>
           item.id === selectedItem.id
-            ? { ...item, qty: item.qty + qty }
+            ? { ...item, qty: item.qty + quantity }
             : item
         )
       }
@@ -55,14 +65,15 @@ export default function Inventory() {
           id: selectedItem.id,
           name: selectedItem.name,
           price: selectedItem.price,
-          qty,
+          qty: quantity,
         },
       ]
     })
 
     setSelectedItem(null)
-    setQty(1)
+    setQty('1')
     setSearch('')
+    setSearchInput('')
   }
 
   const removeFromCart = (id) => {
@@ -88,8 +99,9 @@ export default function Inventory() {
       }
       toast.success('Sale recorded successfully!')
       setSearch('')
+      setSearchInput('')
       setSelectedItem(null)
-      setQty(1)
+      setQty('1')
       setCart([])
     } catch (err) {
       toast.error(err.message || 'Failed to record sale')
@@ -177,61 +189,53 @@ export default function Inventory() {
         <input
           className="w-full border p-2 mb-3"
           placeholder="Search item..."
-          value={search}
+          value={searchInput}
           onChange={(e) => {
-            setSearch(e.target.value)
+            setSearchInput(e.target.value)
             setSelectedItem(null)
           }}
         />
 
-        <div className="max-h-40 overflow-y-auto border mb-3">
+        {/* debounce searchInput -> search (1s) */}
+        {
+          /* place effect near input to debounce updates */
+        }
+
+        <div className="max-h-60 overflow-y-auto border border-blue-200 rounded-lg bg-gradient-to-b from-blue-50 to-white mb-3 shadow-sm">
           {filtered.length > 0 ? (
-            filtered.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-              >
-                {item.name} - ₱{item.price}
-              </div>
-            ))
+            <div className="divide-y divide-blue-100">
+              {filtered.slice(0, 8).map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedItem(item)}
+                  className={`
+                    px-4 py-3 cursor-pointer transition-all duration-200 ease-out
+                    ${selectedItem?.id === item.id
+                      ? 'bg-gradient-to-r from-blue-500 to-green-500 text-white shadow-md'
+                      : 'hover:bg-blue-100 text-gray-800'
+                    }
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{item.name}</span>
+                    <span className={`text-xl font-semibold ${selectedItem?.id === item.id ? 'text-white' : 'text-green-600'}`}>
+                      ₱{item.price}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
-            <div className="p-3 text-center">
-              <p>No item found</p>
+            <div className="p-6 text-center">
+              <p className="text-gray-500 mb-3">No item found</p>
               <button
                 onClick={() => setShowRegister(true)}
-                className="text-blue-500 underline"
+                className="inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200"
               >
-                Register new item
+                + Register new item
               </button>
             </div>
-          )}
-          {/* <div className="grid gap-4">
-            {items.map(item => (
-              <div key={item.id} className="bg-white p-4 rounded shadow grid gap-2 grid-cols-1 md:grid-cols-3">
-
-                <h3>{item.name}</h3>
-                <p>Price: ₱{item.price}</p>
-                <p>Cost: ₱{item.cost}</p>
-
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => setSelected(item)}
-                    className="bg-yellow-500 text-white px-3 py-1 rounded"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div> */}
+          )}  
         </div>
 
         {selectedItem && (
@@ -247,8 +251,7 @@ export default function Inventory() {
               min="1"
               onChange={(e) => {
                 const value = e.target.value
-                if (value === '') return
-                setQty(Number(value))
+                setQty(value)
               }}
               className="w-full border p-2 mt-2"
             />
@@ -312,8 +315,8 @@ export default function Inventory() {
         {pagedItems.map(item => (
           <div key={item.id} className="bg-white p-4 rounded shadow">
             <h3 className="font-bold text-lg mb-2">{item.name}</h3>
-            <p className="text-sm">Price: ₱{item.price}</p>
-            <p className="text-sm mb-3">Cost: ₱{item.cost}</p>
+            <p className="text-lg mb-3 ">Price: ₱{item.price}</p>
+            {/* <p className="text-sm mb-3">Cost: ₱{item.cost}</p> */}
             <div className="flex gap-2">
               <button
                 onClick={() => setEditingItem(item)}

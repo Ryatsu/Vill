@@ -22,18 +22,31 @@ export const createCashRecord = async (data) => {
 }
 
 export const markPaid = async (id) => {
-  const res = await fetch(`${API_URL}/cash/${id}/pay`, { method: 'PUT', headers: { ...authHeaders() } })
+  const res = await fetch(`${API_BASE}/cash/${id}/pay`, { method: 'PUT', headers: { ...authHeaders() } })
   if (!res.ok) throw new Error('Failed to mark cash record as paid')
   return res.json()
 }
 
+export const makePayment = async (id, amount) => {
+  const res = await fetch(`${API_BASE}/cash/${id}/payment`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ amount }),
+  })
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error || 'Failed to process payment')
+  }
+  return res.json()
+}
+
 export const markUnpaid = async (id) => {
-  const res = await fetch(`${API_BASE}/cash/${id}/pay`, { method: 'PUT', headers: { ...authHeaders() } })
+  const res = await fetch(`${API_BASE}/cash/${id}/unpay`, { method: 'PUT', headers: { ...authHeaders() } })
   if (!res.ok) throw new Error('Failed to mark cash record as unpaid')
   return res.json()
 }
 
 export const deleteCash = async (id) => {
-  const res = await fetch(`${API_BASE}/cash/${id}/unpay`, { method: 'PUT', headers: { ...authHeaders() } })
+  const res = await fetch(`${API_BASE}/cash/${id}`, { method: 'DELETE', headers: { ...authHeaders() } })
   if (!res.ok) throw new Error('Failed to delete cash record')
 }

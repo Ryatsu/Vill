@@ -4,14 +4,17 @@ import { createSale } from '../api/saleApi'
 export default function SellModal({ items, onClose }) {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
-  const [qty, setQty] = useState(1)
+  const [qty, setQty] = useState('1')
 
   const filtered = items.filter(i =>
     i.name.toLowerCase().includes(search.toLowerCase())
   )
 
   const handleSell = async () => {
-    await createSale(selected.id, qty)
+    const quantity = Number(qty || 0)
+    if (!quantity || quantity < 1) return
+
+    await createSale(selected.id, quantity)
     onClose()
   }
 
@@ -46,7 +49,7 @@ export default function SellModal({ items, onClose }) {
             <input
               type="number"
               value={qty}
-              onChange={(e) => setQty(Number(e.target.value))}
+              onChange={(e) => setQty(e.target.value)}
               className="w-full border p-2 mt-2"
             />
 
