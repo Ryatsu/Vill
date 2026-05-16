@@ -13,11 +13,11 @@ public class CashRecord {
     @Id
     private String id;
 
-    private String type; // UNPAID_ITEM, BORROWED, LOAN
+    private String type; 
     private String personName;
     private String description;
     private double amount;
-    private double paidAmount = 0.0; // track partial payments
+    private double paidAmount = 0.0;
     private boolean paid;
     private Date date;
     private Date recordedAt;
@@ -25,7 +25,6 @@ public class CashRecord {
 
     public CashRecord() {}
 
-    // getters & setters
     public String getId() {
         return id;
     }
