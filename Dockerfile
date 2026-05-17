@@ -1,15 +1,4 @@
-# # ---------- frontend build ----------
-# FROM node:22-alpine AS frontend-build
-# WORKDIR /frontend
-
-# COPY frontend/package*.json ./
-# RUN npm ci
-
-# COPY frontend/ .
-# RUN npm run build
-
-
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.15-eclipse-temurin-25 AS build
 WORKDIR /app
 
 COPY backend/pom.xml ./
@@ -19,7 +8,7 @@ COPY backend/src ./src
 
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
