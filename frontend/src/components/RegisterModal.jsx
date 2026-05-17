@@ -1,14 +1,28 @@
 import { useState } from 'react'
+import { useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { useConfirm } from '../context/ConfirmationContext'
 
 export default function RegisterModal({ onClose, onSave, items = [] }) {
   const confirm = useConfirm()
   const [form, setForm] = useState({ name: '', price: '', cost: '' })
+  const [isClosing, setIsClosing] = useState(false)
+  const [isOpening, setIsOpening] = useState(false)
+
+  useEffect(() => {
+    setIsOpening(true)
+  }, [])
 
   const hasDuplicateName = items.some(item => 
     item.name.toLowerCase() === form.name.toLowerCase() && form.name.trim() !== ''
   )
+
+  const closeModal = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      onClose()
+    }, 300)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -32,12 +46,13 @@ export default function RegisterModal({ onClose, onSave, items = [] }) {
       cost: Number(form.cost),
     })
 
-    onClose()
+    closeModal()
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center animate-fade-in z-42">
-      <div className="bg-white p-6 rounded-xl w-96 animate-slide-up">
+    <div>
+      <div className={`fixed inset-0 bg-black/40 flex items-center justify-center z-42 transition-all duration-300 ${isClosing ? 'opacity-0' : isOpening ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`bg-white p-6 rounded-xl w-96 transition-all duration-300 ${isClosing ? 'translate-y-[100%]' : isOpening ? 'translate-y-0' : 'translate-y-[100%]'}`}>
 
         <h2 className="text-lg font-bold mb-4">Register Item</h2>
 
@@ -88,13 +103,14 @@ export default function RegisterModal({ onClose, onSave, items = [] }) {
 
             <button
               type="button"
-              onClick={onClose}
+              onClick={closeModal}
               className="flex-1 bg-gray-300 py-2 rounded hover:bg-gray-400 transition-colors"
             >
               Cancel
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   )
